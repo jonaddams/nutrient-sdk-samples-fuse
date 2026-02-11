@@ -1,0 +1,167 @@
+/* Two-Click Signature Demo Styles */
+
+.demo-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+}
+
+/* Sidebar */
+.demo-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background-color: var(--warm-gray-100);
+  border-right: 1px solid var(--warm-gray-400);
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .demo-sidebar {
+    background-color: var(--warm-gray-950);
+    border-right-color: var(--warm-gray-800);
+  }
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--black);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar-label {
+    color: var(--warm-gray-400);
+  }
+}
+
+/* Load Fields Button */
+.load-fields-btn {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.24px;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  font-weight: 400;
+  text-transform: uppercase;
+  border-radius: 0.5rem;
+  border: none;
+  transition: opacity 0.15s;
+  cursor: pointer;
+  min-height: 2.5rem;
+  background: var(--data-green);
+  color: var(--white);
+}
+
+.load-fields-btn:hover {
+  opacity: 0.8;
+}
+
+@media (prefers-color-scheme: dark) {
+  .load-fields-btn {
+    background: var(--data-green);
+    color: var(--black);
+  }
+}
+
+/* Instructions */
+.instructions {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--warm-gray-800);
+  padding: 12px;
+  background-color: var(--warm-gray-200);
+  border-radius: 6px;
+}
+
+.instructions ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.instructions li {
+  margin-bottom: 8px;
+}
+
+.instructions li:last-child {
+  margin-bottom: 0;
+}
+
+.instructions strong {
+  color: var(--black);
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .instructions {
+    background-color: var(--warm-gray-900);
+    color: var(--warm-gray-400);
+  }
+
+  .instructions strong {
+    color: var(--warm-gray-300);
+  }
+}
+
+/* Viewer */
+.demo-viewer {
+  flex: 1;
+  height: 100%;
+  min-height: 600px;
+}
+
+/* Signature Overlay */
+.signature-overlay {
+  transition: all 0.2s ease;
+}
+
+.signature-overlay.clicked {
+  animation: pulse-border 1.5s ease-in-out infinite;
+  font-style: italic;
+  color: #666 !important;
+}
+
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-width: 2px;
+    opacity: 1;
+  }
+  50% {
+    border-width: 3px;
+    opacity: 0.8;
+  }
+}
+
+/* Status Overlay */
+.status-overlay {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+}
+
+.status-message {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: #3b82f6;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
