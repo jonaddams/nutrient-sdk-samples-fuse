@@ -1,32 +1,4 @@
-/* Google Fonts - JetBrains Mono for code */
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
-
 @import "tailwindcss";
-
-/* Nutrient Font Faces */
-@font-face {
-  font-family: "ABC Monument Grotesk";
-  src: url("/fonts/ABCMonumentGroteskVariable.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "ABC Monument Grotesk Mono";
-  src: url("/fonts/ABCMonumentGroteskSemi-Mono-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "ABC Monument Grotesk Mono";
-  src: url("/fonts/ABCMonumentGroteskMono-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
 
 :root {
   /* Nutrient Colors */
@@ -55,10 +27,8 @@
   --neutral: var(--warm-gray-400);
 
   /* Typography */
-  --font-sans: "ABC Monument Grotesk", system-ui, -apple-system, sans-serif;
-  --font-mono:
-    "JetBrains Mono", "ABC Monument Grotesk Mono", "Fira Code", "Consolas",
-    ui-monospace, "Courier New", monospace;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Courier New", monospace;
 
   /* Spacing - Nutrient Scale */
   --spacing-4xs: 0.125rem;
