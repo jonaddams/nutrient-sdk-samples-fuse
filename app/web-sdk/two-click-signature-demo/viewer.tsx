@@ -328,7 +328,7 @@ export default function TwoClickSignatureViewer() {
   }, []);
 
   /**
-   * Load default signature fields onto the document
+   * Load all form fields onto the document (text, checkboxes, radio, signature)
    */
   const handleLoadFields = async () => {
     const instance = instanceRef.current;
