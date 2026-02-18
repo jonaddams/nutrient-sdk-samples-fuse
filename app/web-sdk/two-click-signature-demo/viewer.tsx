@@ -170,6 +170,7 @@ export default function TwoClickSignatureViewer() {
           document: "/documents/blank.pdf",
           licenseKey: process.env.NEXT_PUBLIC_NUTRIENT_LICENSE_KEY,
           useCDN: true,
+          styleSheets: ["/form-field-styles.css"],
 
           /**
            * CUSTOM RENDERER: Implements two-click signature behavior
@@ -418,6 +419,9 @@ export default function TwoClickSignatureViewer() {
       const agreeField = new NV.FormFields.CheckBoxFormField({
         name: agreeId,
         annotationIds: NV.Immutable.List([agreeId]),
+        options: NV.Immutable.List([
+          new NV.FormOption({ label: "Agree to terms", value: "Yes" }),
+        ]),
       });
 
       const updatesId = `checkbox-updates-${Date.now()}-${Math.random()}`;
@@ -435,6 +439,9 @@ export default function TwoClickSignatureViewer() {
       const updatesField = new NV.FormFields.CheckBoxFormField({
         name: updatesId,
         annotationIds: NV.Immutable.List([updatesId]),
+        options: NV.Immutable.List([
+          new NV.FormOption({ label: "Receive updates", value: "Yes" }),
+        ]),
       });
 
       await instance.create([
