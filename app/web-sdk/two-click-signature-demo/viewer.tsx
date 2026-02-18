@@ -1,15 +1,17 @@
 "use client";
 
 /**
- * Two-Click Signature Demo - Minimal Implementation
+ * Two-Click Signature Demo - Nutrient Web SDK
  *
- * Demonstrates custom signature behavior requiring two clicks:
- * 1. First click: Shows "click to sign" text
- * 2. Second click: Opens the signing UI
+ * Custom signature field behavior:
+ * - Default: shows "sign here" on all signature fields
+ * - First click: changes to "click to sign"
+ * - Click elsewhere or focus away: reverts to "sign here"
+ * - Second click: opens the signing UI
  */
 
 import type { Instance } from "@nutrient-sdk/viewer";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./styles.css";
 
 export default function TwoClickSignatureViewer() {
@@ -19,7 +21,45 @@ export default function TwoClickSignatureViewer() {
   const [status, setStatus] = useState<string>("");
 
   /**
-   * Updates signed field overlays by checking for overlapping annotations
+   * Tracks which annotation is currently in "click to sign" state.
+   * Only one field can be active at a time.
+   */
+  const activeAnnotationIdRef = useRef<string | null>(null);
+
+  /**
+   * Resets the currently active annotation back to "sign here".
+   * Called when the user clicks elsewhere or focuses away.
+   */
+  const resetActiveAnnotation = useCallback(async () => {
+    const activeId = activeAnnotationIdRef.current;
+    if (!activeId) return;
+
+    activeAnnotationIdRef.current = null;
+
+    const instance = instanceRef.current;
+    const NV = window.NutrientViewer;
+    if (!instance || !NV) return;
+
+    const totalPages = instance.totalPageCount;
+    for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+      const annotations = await instance.getAnnotations(pageIndex);
+      const widget = annotations.find(
+        (ann) =>
+          ann instanceof NV.Annotations.WidgetAnnotation &&
+          ann.id === activeId,
+      );
+      if (widget?.customData) {
+        await instance.update(
+          widget.set("customData", { ...widget.customData, clickedOnce: false }),
+        );
+        break;
+      }
+    }
+  }, []);
+
+  /**
+   * Marks signed fields by checking for overlapping signature image annotations.
+   * When a field is signed, its overlay is removed by returning null from the renderer.
    */
   const updateSignedFieldOverlays = async () => {
     const instance = instanceRef.current;
@@ -28,29 +68,28 @@ export default function TwoClickSignatureViewer() {
 
     try {
       const formFields = await instance.getFormFields();
-      const totalPages = await instance.totalPageCount;
+      const totalPages = instance.totalPageCount;
 
       for (const field of formFields) {
         if (field instanceof NV.FormFields.SignatureFormField) {
           const overlapping = await instance.getOverlappingAnnotations(field);
 
           if (overlapping.size > 0) {
-            // Field is signed - mark it in customData
             for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
               const annotations = await instance.getAnnotations(pageIndex);
               const widget = annotations.find(
                 (ann) =>
                   ann instanceof NV.Annotations.WidgetAnnotation &&
-                  ann.formFieldName === field.name
+                  ann.formFieldName === field.name,
               );
-
               if (widget?.customData) {
-                const updatedAnnotation = widget.set("customData", {
-                  ...widget.customData,
-                  isSigned: true,
-                  clickedOnce: false,
-                });
-                await instance.update(updatedAnnotation);
+                await instance.update(
+                  widget.set("customData", {
+                    ...widget.customData,
+                    isSigned: true,
+                    clickedOnce: false,
+                  }),
+                );
                 break;
               }
             }
@@ -61,6 +100,25 @@ export default function TwoClickSignatureViewer() {
       console.error("Error updating signed field overlays:", error);
     }
   };
+
+  /**
+   * Native container listener to detect "click elsewhere".
+   *
+   * Signature overlay handlers use pointerdown + capture:true + stopImmediatePropagation,
+   * so clicks ON overlays never reach the bubble phase. Any click that does reach here
+   * means the user clicked outside a signature field.
+   */
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleClickElsewhere = () => resetActiveAnnotation();
+    container.addEventListener("pointerdown", handleClickElsewhere);
+
+    return () => {
+      container.removeEventListener("pointerdown", handleClickElsewhere);
+    };
+  }, []);
 
   /**
    * Initialize Nutrient Web SDK Viewer
@@ -81,12 +139,16 @@ export default function TwoClickSignatureViewer() {
         // biome-ignore lint/suspicious/noExplicitAny: NutrientViewer configuration types not fully available
         const configuration: any = {
           container,
-          document: "/documents/service-agreement.pdf",
+          document: "/documents/blank.pdf",
           licenseKey: process.env.NEXT_PUBLIC_NUTRIENT_LICENSE_KEY,
           useCDN: true,
 
           /**
            * CUSTOM RENDERER: Implements two-click signature behavior
+           *
+           * - Default:      "sign here"
+           * - After click:  "click to sign"  (customData.clickedOnce = true)
+           * - After signing: overlay removed  (customData.isSigned = true)
            */
           customRenderers: {
             // biome-ignore lint/suspicious/noExplicitAny: annotation type not fully available
@@ -94,95 +156,104 @@ export default function TwoClickSignatureViewer() {
               const NV2 = window.NutrientViewer;
               if (!NV2) return null;
 
-              // Only customize signature fields
               if (
-                annotation instanceof NV2.Annotations.WidgetAnnotation &&
-                annotation.customData?.type === "signature"
+                !(annotation instanceof NV2.Annotations.WidgetAnnotation) ||
+                annotation.customData?.type !== "signature"
               ) {
-                const customData = annotation.customData as {
-                  signerName: string;
-                  signerColor: string;
-                  clickedOnce?: boolean;
-                  isSigned?: boolean;
-                };
-                const { signerName, signerColor, clickedOnce, isSigned } = customData;
-
-                // Skip rendering overlay for signed fields
-                if (isSigned) return null;
-
-                // Create custom overlay
-                const node = document.createElement("div");
-                node.className = clickedOnce
-                  ? "signature-overlay clicked"
-                  : "signature-overlay";
-                node.setAttribute(
-                  "data-form-field-name",
-                  annotation.formFieldName || ""
-                );
-
-                node.style.cssText = `
-                  width: 100%;
-                  height: 100%;
-                  border: 2px solid ${signerColor};
-                  background-color: ${signerColor}15;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  font-size: 14px;
-                  font-weight: 500;
-                  color: #333;
-                  cursor: pointer;
-                  user-select: none;
-                  pointer-events: auto;
-                `;
-
-                // Display text based on click state
-                node.textContent = clickedOnce ? "click to sign" : signerName;
-
-                /**
-                 * TWO-CLICK HANDLER
-                 */
-                function handleClick(event: PointerEvent) {
-                  event.stopImmediatePropagation();
-
-                  const instance = instanceRef.current;
-                  const NV3 = window.NutrientViewer;
-                  if (!instance || !NV3) return;
-
-                  if (!clickedOnce) {
-                    // First click: Mark as clicked
-                    console.log("✓ First click - showing 'click to sign'");
-                    const updatedAnnotation = annotation.set("customData", {
-                      ...customData,
-                      clickedOnce: true,
-                    });
-                    instance.update(updatedAnnotation);
-                  } else {
-                    // Second click: Open signing UI
-                    console.log("✓ Second click - opening signing UI");
-                    // @ts-expect-error - Immutable.List constructor type not fully available
-                    instance.setSelectedAnnotations(
-                      new NV3.Immutable.List([annotation.id])
-                    );
-                  }
-                }
-
-                node.addEventListener("pointerdown", handleClick, {
-                  capture: true,
-                });
-
-                return {
-                  node,
-                  append: true,
-                  onDisappear: () => {
-                    node.removeEventListener("pointerdown", handleClick, {
-                      capture: true,
-                    });
-                  },
-                };
+                return null;
               }
 
-              return null;
+              const customData = annotation.customData as {
+                signerColor: string;
+                clickedOnce?: boolean;
+                isSigned?: boolean;
+              };
+              const { signerColor, clickedOnce, isSigned } = customData;
+
+              // Field has been signed — remove the overlay
+              if (isSigned) return null;
+
+              const node = document.createElement("div");
+              node.className = clickedOnce
+                ? "signature-overlay clicked"
+                : "signature-overlay";
+              node.setAttribute(
+                "data-form-field-name",
+                annotation.formFieldName || "",
+              );
+              node.style.cssText = `
+                width: 100%;
+                height: 100%;
+                border: 2px solid ${signerColor};
+                background-color: ${signerColor}15;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: 500;
+                color: #333;
+                cursor: pointer;
+                user-select: none;
+                pointer-events: auto;
+              `;
+
+              node.textContent = clickedOnce ? "click to sign" : "sign here";
+
+              /**
+               * TWO-CLICK HANDLER
+               *
+               * capture:true + stopImmediatePropagation ensures this intercepts
+               * the event before the SDK's default signature UI behavior.
+               *
+               * First click:  marks this annotation as active ("click to sign")
+               *               and resets any previously active annotation
+               * Second click: opens the signing UI via setSelectedAnnotations
+               */
+              function handleClick(event: PointerEvent) {
+                event.stopImmediatePropagation();
+
+                const instance = instanceRef.current;
+                const NV3 = window.NutrientViewer;
+                if (!instance || !NV3) return;
+
+                const isAlreadyActive =
+                  activeAnnotationIdRef.current === annotation.id;
+
+                if (isAlreadyActive) {
+                  // Second click: open signing UI
+                  // Leave activeAnnotationIdRef set — annotationSelection.change
+                  // will reset it when the signing UI closes
+                  instance.setSelectedAnnotations(
+                    NV3.Immutable.List([annotation.id]),
+                  );
+                } else {
+                  // First click: reset any other active annotation, then activate this one
+                  if (activeAnnotationIdRef.current) {
+                    resetActiveAnnotation();
+                  }
+                  activeAnnotationIdRef.current = annotation.id;
+                  instance.update(
+                    annotation.set("customData", {
+                      ...customData,
+                      clickedOnce: true,
+                    }),
+                  );
+                }
+              }
+
+              node.addEventListener("pointerdown", handleClick, {
+                capture: true,
+              });
+
+              return {
+                node,
+                append: true,
+                onDisappear: () => {
+                  node.removeEventListener("pointerdown", handleClick, {
+                    capture: true,
+                  });
+                },
+              };
             },
           },
         };
@@ -192,7 +263,16 @@ export default function TwoClickSignatureViewer() {
 
         instanceRef.current = instance;
 
-        // Listen for signature creation to update overlays
+        /**
+         * annotationSelection.change handles revert-on-dismiss after the second click.
+         * When the signing UI closes (cancel or apply), the annotation is deselected
+         * and this event fires, resetting the "click to sign" state.
+         */
+        instance.addEventListener("annotationSelection.change", () => {
+          resetActiveAnnotation();
+        });
+
+        // Detect signed fields after a signature is created or updated
         instance.addEventListener("annotations.create", () => {
           setTimeout(() => updateSignedFieldOverlays(), 100);
           setTimeout(() => updateSignedFieldOverlays(), 300);
@@ -202,7 +282,6 @@ export default function TwoClickSignatureViewer() {
           setTimeout(() => updateSignedFieldOverlays(), 100);
         });
 
-        // Initial check
         setTimeout(() => updateSignedFieldOverlays(), 500);
       } catch (error) {
         console.error("Error loading viewer:", error);
@@ -223,7 +302,32 @@ export default function TwoClickSignatureViewer() {
   }, []);
 
   /**
-   * Load default signature fields
+   * Creates a non-interactive TextAnnotation to serve as a form field label.
+   */
+  const createLabel = (
+    NV: NonNullable<typeof window.NutrientViewer>,
+    text: string,
+    x: number,
+    y: number,
+    width: number,
+    height = 20,
+  ) =>
+    new NV.Annotations.TextAnnotation({
+      pageIndex: 0,
+      boundingBox: new NV.Geometry.Rect({ left: x, top: y, width, height }),
+      text: { format: "plain", value: text },
+      fontSize: 11,
+      isBold: false,
+      horizontalAlign: "left",
+      verticalAlign: "center",
+      locked: true,
+      isDeletable: false,
+      isEditable: false,
+      customData: { type: "form-label" },
+    });
+
+  /**
+   * Load default signature fields onto the document
    */
   const handleLoadFields = async () => {
     const instance = instanceRef.current;
@@ -233,42 +337,53 @@ export default function TwoClickSignatureViewer() {
     try {
       setStatus("Loading signature fields...");
 
-      // Clear existing fields
+      // Clear existing form fields (widget annotations are deleted automatically)
       const existingFields = await instance.getFormFields();
       for (const field of existingFields) {
         await instance.delete(field);
       }
 
-      // Create signature fields for two signers
-      const signers = [
-        { name: "John Doe", color: "#4A90E2", x: 96, y: 553 },
-        { name: "Jane Smith", color: "#7B68EE", x: 318, y: 553 },
+      // Clear existing label annotations (TextAnnotations tagged form-label)
+      const existingAnnotations = await instance.getAnnotations(0);
+      const labelAnnotations = existingAnnotations.filter(
+        // biome-ignore lint/suspicious/noExplicitAny: annotation type not fully available
+        (ann: any) => ann.customData?.type === "form-label",
+      );
+      for (const label of labelAnnotations) {
+        await instance.delete(label);
+      }
+
+      // Two rows of signature fields, 100px apart
+      const fields = [
+        { name: "John Doe",   color: "#4A90E2", x: 96,  y: 300 },
+        { name: "Jane Smith", color: "#7B68EE", x: 318, y: 300 },
+        { name: "John Doe",   color: "#4A90E2", x: 96,  y: 400 },
+        { name: "Jane Smith", color: "#7B68EE", x: 318, y: 400 },
       ];
 
-      for (const signer of signers) {
+      for (const field of fields) {
         const fieldId = `signature-${Date.now()}-${Math.random()}`;
 
         const annotation = new NV.Annotations.WidgetAnnotation({
           id: fieldId,
-          pageIndex: 1, // Page 2
+          pageIndex: 0,
           boundingBox: new NV.Geometry.Rect({
-            left: signer.x,
-            top: signer.y,
+            left: field.x,
+            top: field.y,
             width: 150,
             height: 50,
           }),
           formFieldName: fieldId,
           customData: {
-            signerName: signer.name,
-            signerColor: signer.color,
+            signerName: field.name,
+            signerColor: field.color,
             type: "signature",
           },
         });
 
         const formField = new NV.FormFields.SignatureFormField({
           name: fieldId,
-          // @ts-expect-error - Immutable.List constructor type not available
-          annotationIds: new NV.Immutable.List([fieldId]),
+          annotationIds: NV.Immutable.List([fieldId]),
         });
 
         await instance.create([annotation, formField]);
@@ -304,11 +419,16 @@ export default function TwoClickSignatureViewer() {
             <ol>
               <li>Click "Load Signature Fields" to add fields to the document</li>
               <li>
-                <strong>First click</strong> on a signature field shows "click
-                to sign"
+                <strong>First click</strong> on a field changes it to "click to
+                sign"
               </li>
               <li>
-                <strong>Second click</strong> opens the signing interface
+                Clicking <strong>elsewhere</strong> reverts the field back to
+                "sign here"
+              </li>
+              <li>
+                <strong>Second click</strong> on an active field opens the
+                signing interface
               </li>
               <li>After signing, the overlay is removed automatically</li>
             </ol>
