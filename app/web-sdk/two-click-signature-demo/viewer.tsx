@@ -71,12 +71,14 @@ export default function TwoClickSignatureViewer() {
       const annotations = await instance.getAnnotations(pageIndex);
       const widget = annotations.find(
         (ann) =>
-          ann instanceof NV.Annotations.WidgetAnnotation &&
-          ann.id === activeId,
+          ann instanceof NV.Annotations.WidgetAnnotation && ann.id === activeId,
       );
       if (widget?.customData) {
         await instance.update(
-          widget.set("customData", { ...widget.customData, clickedOnce: false }),
+          widget.set("customData", {
+            ...widget.customData,
+            clickedOnce: false,
+          }),
         );
         break;
       }
@@ -144,7 +146,7 @@ export default function TwoClickSignatureViewer() {
     return () => {
       container.removeEventListener("pointerdown", handleClickElsewhere);
     };
-  }, []);
+  }, [resetActiveAnnotation]);
 
   /**
    * Initialize Nutrient Web SDK Viewer
@@ -360,7 +362,12 @@ export default function TwoClickSignatureViewer() {
         id: fullNameId,
         pageIndex: 0,
         formFieldName: fullNameId,
-        boundingBox: new NV.Geometry.Rect({ left: 160, top: 50, width: 280, height: 24 }),
+        boundingBox: new NV.Geometry.Rect({
+          left: 160,
+          top: 50,
+          width: 280,
+          height: 24,
+        }),
       });
       const fullNameField = new NV.FormFields.TextFormField({
         name: fullNameId,
@@ -373,7 +380,12 @@ export default function TwoClickSignatureViewer() {
         id: dateId,
         pageIndex: 0,
         formFieldName: dateId,
-        boundingBox: new NV.Geometry.Rect({ left: 160, top: 100, width: 150, height: 24 }),
+        boundingBox: new NV.Geometry.Rect({
+          left: 160,
+          top: 100,
+          width: 150,
+          height: 24,
+        }),
       });
       const dateField = new NV.FormFields.TextFormField({
         name: dateId,
@@ -396,7 +408,12 @@ export default function TwoClickSignatureViewer() {
         id: agreeId,
         pageIndex: 0,
         formFieldName: agreeId,
-        boundingBox: new NV.Geometry.Rect({ left: 50, top: 150, width: 20, height: 20 }),
+        boundingBox: new NV.Geometry.Rect({
+          left: 50,
+          top: 150,
+          width: 20,
+          height: 20,
+        }),
       });
       const agreeField = new NV.FormFields.CheckBoxFormField({
         name: agreeId,
@@ -408,7 +425,12 @@ export default function TwoClickSignatureViewer() {
         id: updatesId,
         pageIndex: 0,
         formFieldName: updatesId,
-        boundingBox: new NV.Geometry.Rect({ left: 220, top: 150, width: 20, height: 20 }),
+        boundingBox: new NV.Geometry.Rect({
+          left: 220,
+          top: 150,
+          width: 20,
+          height: 20,
+        }),
       });
       const updatesField = new NV.FormFields.CheckBoxFormField({
         name: updatesId,
@@ -433,13 +455,23 @@ export default function TwoClickSignatureViewer() {
         id: emailRadioId,
         pageIndex: 0,
         formFieldName: contactFieldName,
-        boundingBox: new NV.Geometry.Rect({ left: 180, top: 200, width: 20, height: 20 }),
+        boundingBox: new NV.Geometry.Rect({
+          left: 180,
+          top: 200,
+          width: 20,
+          height: 20,
+        }),
       });
       const phoneWidget = new NV.Annotations.WidgetAnnotation({
         id: phoneRadioId,
         pageIndex: 0,
         formFieldName: contactFieldName,
-        boundingBox: new NV.Geometry.Rect({ left: 260, top: 200, width: 20, height: 20 }),
+        boundingBox: new NV.Geometry.Rect({
+          left: 260,
+          top: 200,
+          width: 20,
+          height: 20,
+        }),
       });
       const contactField = new NV.FormFields.RadioButtonFormField({
         name: contactFieldName,
@@ -462,9 +494,9 @@ export default function TwoClickSignatureViewer() {
 
       // Two rows of signature fields, 100px apart
       const fields = [
-        { name: "John Doe",   color: "#4A90E2", x: 96,  y: 300 },
+        { name: "John Doe", color: "#4A90E2", x: 96, y: 300 },
         { name: "Jane Smith", color: "#7B68EE", x: 318, y: 300 },
-        { name: "John Doe",   color: "#4A90E2", x: 96,  y: 400 },
+        { name: "John Doe", color: "#4A90E2", x: 96, y: 400 },
         { name: "Jane Smith", color: "#7B68EE", x: 318, y: 400 },
       ];
 
@@ -531,8 +563,8 @@ export default function TwoClickSignatureViewer() {
                 <strong>radio option</strong>
               </li>
               <li>
-                <strong>First click</strong> on a signature field changes it
-                to "click to sign"
+                <strong>First click</strong> on a signature field changes it to
+                "click to sign"
               </li>
               <li>
                 Clicking <strong>elsewhere</strong> reverts it back to "sign
