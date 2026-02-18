@@ -326,14 +326,23 @@ export default function TwoClickSignatureViewer() {
               }
 
               const customData = annotation.customData as {
+                signerName: string;
                 signerColor: string;
                 clickedOnce?: boolean;
                 isSigned?: boolean;
               };
-              const { signerColor, clickedOnce, isSigned } = customData;
+              const { signerName, signerColor, clickedOnce, isSigned } =
+                customData;
 
               // Field has been signed — remove the overlay
               if (isSigned) return null;
+
+              const initials = signerName
+                .split(" ")
+                .map((w) => w[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2);
 
               const node = document.createElement("div");
               node.className = clickedOnce
@@ -344,6 +353,7 @@ export default function TwoClickSignatureViewer() {
                 annotation.formFieldName || "",
               );
               node.style.cssText = `
+                position: relative;
                 width: 100%;
                 height: 100%;
                 border: 2px solid ${signerColor};
@@ -359,7 +369,28 @@ export default function TwoClickSignatureViewer() {
                 pointer-events: auto;
               `;
 
-              node.textContent = clickedOnce ? "click to sign" : "sign here";
+              const textSpan = document.createElement("span");
+              textSpan.textContent = clickedOnce
+                ? "click to sign"
+                : "sign here";
+              node.appendChild(textSpan);
+
+              const initialsBadge = document.createElement("span");
+              initialsBadge.textContent = initials;
+              initialsBadge.style.cssText = `
+                position: absolute;
+                top: 2px;
+                right: 3px;
+                background-color: ${signerColor};
+                color: white;
+                font-size: 9px;
+                font-weight: bold;
+                font-style: normal;
+                padding: 1px 4px;
+                border-radius: 3px;
+                letter-spacing: 0.3px;
+              `;
+              node.appendChild(initialsBadge);
 
               /**
                * TWO-CLICK HANDLER
