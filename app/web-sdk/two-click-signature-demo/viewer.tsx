@@ -390,6 +390,40 @@ export default function TwoClickSignatureViewer() {
         dateField,
       ]);
 
+      // ── Checkboxes ───────────────────────────────────────────
+      const agreeId = `checkbox-agree-${Date.now()}-${Math.random()}`;
+      const agreeWidget = new NV.Annotations.WidgetAnnotation({
+        id: agreeId,
+        pageIndex: 0,
+        formFieldName: agreeId,
+        boundingBox: new NV.Geometry.Rect({ left: 50, top: 150, width: 20, height: 20 }),
+      });
+      const agreeField = new NV.FormFields.CheckBoxFormField({
+        name: agreeId,
+        annotationIds: NV.Immutable.List([agreeId]),
+      });
+
+      const updatesId = `checkbox-updates-${Date.now()}-${Math.random()}`;
+      const updatesWidget = new NV.Annotations.WidgetAnnotation({
+        id: updatesId,
+        pageIndex: 0,
+        formFieldName: updatesId,
+        boundingBox: new NV.Geometry.Rect({ left: 220, top: 150, width: 20, height: 20 }),
+      });
+      const updatesField = new NV.FormFields.CheckBoxFormField({
+        name: updatesId,
+        annotationIds: NV.Immutable.List([updatesId]),
+      });
+
+      await instance.create([
+        agreeWidget,
+        agreeField,
+        createLabel(NV, "Agree to terms", 78, 150, 130),
+        updatesWidget,
+        updatesField,
+        createLabel(NV, "Receive updates", 248, 150, 130),
+      ]);
+
       // Two rows of signature fields, 100px apart
       const fields = [
         { name: "John Doe",   color: "#4A90E2", x: 96,  y: 300 },
