@@ -424,6 +424,42 @@ export default function TwoClickSignatureViewer() {
         createLabel(NV, "Receive updates", 248, 150, 130),
       ]);
 
+      // ── Radio buttons ────────────────────────────────────────
+      const contactFieldName = `radio-contact-${Date.now()}-${Math.random()}`;
+      const emailRadioId = `${contactFieldName}-email`;
+      const phoneRadioId = `${contactFieldName}-phone`;
+
+      const emailWidget = new NV.Annotations.WidgetAnnotation({
+        id: emailRadioId,
+        pageIndex: 0,
+        formFieldName: contactFieldName,
+        boundingBox: new NV.Geometry.Rect({ left: 180, top: 200, width: 20, height: 20 }),
+      });
+      const phoneWidget = new NV.Annotations.WidgetAnnotation({
+        id: phoneRadioId,
+        pageIndex: 0,
+        formFieldName: contactFieldName,
+        boundingBox: new NV.Geometry.Rect({ left: 260, top: 200, width: 20, height: 20 }),
+      });
+      const contactField = new NV.FormFields.RadioButtonFormField({
+        name: contactFieldName,
+        annotationIds: NV.Immutable.List([emailRadioId, phoneRadioId]),
+        options: NV.Immutable.List([
+          new NV.FormOption({ label: "Email", value: "email" }),
+          new NV.FormOption({ label: "Phone", value: "phone" }),
+        ]),
+        defaultValue: "email",
+      });
+
+      await instance.create([
+        createLabel(NV, "Preferred contact:", 50, 202, 125),
+        emailWidget,
+        phoneWidget,
+        contactField,
+        createLabel(NV, "Email", 206, 202, 45),
+        createLabel(NV, "Phone", 286, 202, 45),
+      ]);
+
       // Two rows of signature fields, 100px apart
       const fields = [
         { name: "John Doe",   color: "#4A90E2", x: 96,  y: 300 },
