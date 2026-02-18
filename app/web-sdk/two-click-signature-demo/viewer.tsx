@@ -374,6 +374,7 @@ export default function TwoClickSignatureViewer() {
         name: fullNameId,
         annotationIds: NV.Immutable.List([fullNameId]),
         value: "",
+        required: true,
       });
 
       const dateId = `text-date-${Date.now()}-${Math.random()}`;
@@ -392,13 +393,14 @@ export default function TwoClickSignatureViewer() {
         name: dateId,
         annotationIds: NV.Immutable.List([dateId]),
         value: "",
+        required: true,
       });
 
       await instance.create([
-        createLabel(NV, "Full Name:", 50, 52, 100),
+        createLabel(NV, "Full Name: *", 50, 52, 106),
         fullNameWidget,
         fullNameField,
-        createLabel(NV, "Date:", 50, 102, 100),
+        createLabel(NV, "Date: *", 50, 102, 106),
         dateWidget,
         dateField,
       ]);
@@ -422,6 +424,7 @@ export default function TwoClickSignatureViewer() {
         options: NV.Immutable.List([
           new NV.FormOption({ label: "Agree to terms", value: "Yes" }),
         ]),
+        required: true,
       });
 
       const updatesId = `checkbox-updates-${Date.now()}-${Math.random()}`;
@@ -447,7 +450,7 @@ export default function TwoClickSignatureViewer() {
       await instance.create([
         agreeWidget,
         agreeField,
-        createLabel(NV, "Agree to terms", 78, 150, 130),
+        createLabel(NV, "Agree to terms *", 78, 150, 140),
         updatesWidget,
         updatesField,
         createLabel(NV, "Receive updates", 248, 150, 130),
@@ -488,10 +491,11 @@ export default function TwoClickSignatureViewer() {
           new NV.FormOption({ label: "Phone", value: "phone" }),
         ]),
         defaultValue: "email",
+        required: true,
       });
 
       await instance.create([
-        createLabel(NV, "Preferred contact:", 50, 202, 125),
+        createLabel(NV, "Preferred contact: *", 50, 202, 135),
         emailWidget,
         phoneWidget,
         contactField,

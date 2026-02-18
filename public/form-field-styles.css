@@ -16,6 +16,18 @@
   box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2) !important;
 }
 
+/* Required fields — invalid (empty/unchecked) */
+.PSPDFKit-Annotation-Widget-Required:invalid {
+  border: 1px solid #e53e3e !important;
+  background-color: rgba(255, 245, 245, 0.9) !important;
+}
+
+/* Required fields — valid (filled/checked) */
+.PSPDFKit-Annotation-Widget-Required {
+  border: 1px solid #38a169 !important;
+  background-color: rgba(245, 255, 249, 0.9) !important;
+}
+
 /* Checkboxes */
 .PSPDFKit-Annotation-Widget-CheckBox {
   accent-color: #4a90e2;
