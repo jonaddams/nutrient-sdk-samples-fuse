@@ -34,6 +34,8 @@ function createLabel(
     horizontalAlign: "left",
     verticalAlign: "center",
     locked: true,
+    lockedContents: true,
+    readOnly: true,
     isDeletable: false,
     isEditable: false,
     customData: { type: "form-label" },
