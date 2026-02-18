@@ -134,13 +134,48 @@ export default function TwoClickSignatureViewer() {
    *
    * Signature overlay handlers use pointerdown + capture:true + stopImmediatePropagation,
    * so clicks ON overlays never reach the bubble phase. Any click that does reach here
-   * means the user clicked outside a signature field.
+   * means the user clicked outside a custom overlay.
+   *
+   * Also resets any text-field overlay that was opened (activated) but not filled,
+   * unless the click was on a text input itself (user repositioning cursor).
    */
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const handleClickElsewhere = () => resetActiveAnnotation();
+    const handleClickElsewhere = (event: Event) => {
+      resetActiveAnnotation();
+
+      // Don't reset when clicking inside a text input (repositioning cursor)
+      const target = event.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" &&
+        (target as HTMLInputElement).type === "text"
+      )
+        return;
+
+      // Reset any text-field overlay opened but not filled
+      const inst = instanceRef.current;
+      const NV3 = window.NutrientViewer;
+      if (!inst || !NV3) return;
+
+      (async () => {
+        const annotations = await inst.getAnnotations(0);
+        for (const ann of annotations) {
+          if (
+            ann instanceof NV3.Annotations.WidgetAnnotation &&
+            ann.customData?.type === "text-field" &&
+            ann.customData?.activated === true &&
+            !ann.customData?.hasValue
+          ) {
+            await inst.update(
+              ann.set("customData", { ...ann.customData, activated: false }),
+            );
+          }
+        }
+      })().catch(console.error);
+    };
+
     container.addEventListener("pointerdown", handleClickElsewhere);
 
     return () => {
@@ -263,39 +298,9 @@ export default function TwoClickSignatureViewer() {
                   // Focus the SDK input after the overlay is removed
                   const c = containerRef.current;
                   setTimeout(() => {
-                    const input = c?.querySelector<HTMLInputElement>(
+                    c?.querySelector<HTMLInputElement>(
                       `input[name="${annotation.formFieldName}"]`,
-                    );
-                    if (!input) return;
-                    input.focus();
-
-                    // If user leaves without typing, revert overlay
-                    input.addEventListener(
-                      "blur",
-                      async () => {
-                        const inst = instanceRef.current;
-                        const NV3 = window.NutrientViewer;
-                        if (!inst || !NV3) return;
-                        const pageAnnotations = await inst.getAnnotations(0);
-                        const currentAnn = pageAnnotations.find(
-                          (a) =>
-                            a instanceof NV3.Annotations.WidgetAnnotation &&
-                            a.id === annotation.id,
-                        );
-                        if (
-                          currentAnn?.customData?.activated &&
-                          !currentAnn?.customData?.hasValue
-                        ) {
-                          await inst.update(
-                            currentAnn.set("customData", {
-                              ...currentAnn.customData,
-                              activated: false,
-                            }),
-                          );
-                        }
-                      },
-                      { once: true },
-                    );
+                    )?.focus();
                   }, 100);
                 }
 
