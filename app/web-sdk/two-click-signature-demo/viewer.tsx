@@ -185,10 +185,108 @@ export default function TwoClickSignatureViewer() {
               const NV2 = window.NutrientViewer;
               if (!NV2) return null;
 
-              if (
-                !(annotation instanceof NV2.Annotations.WidgetAnnotation) ||
-                annotation.customData?.type !== "signature"
-              ) {
+              if (!(annotation instanceof NV2.Annotations.WidgetAnnotation)) {
+                return null;
+              }
+
+              /**
+               * TEXT FIELD OVERLAY
+               *
+               * Shows a styled badge (T + signer name) over the field.
+               * On click: removes the overlay and focuses the native SDK input.
+               */
+              if (annotation.customData?.type === "text-field") {
+                const { signerName, signerColor, activated } =
+                  annotation.customData as {
+                    signerName: string;
+                    signerColor: string;
+                    activated?: boolean;
+                  };
+
+                // Overlay dismissed — show native SDK text input
+                if (activated) return null;
+
+                const node = document.createElement("div");
+                node.style.cssText = `
+                  position: absolute;
+                  inset: 0;
+                  border: 2px solid ${signerColor};
+                  background-color: ${signerColor}15;
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  padding: 0 6px;
+                  cursor: text;
+                  user-select: none;
+                  pointer-events: auto;
+                  box-sizing: border-box;
+                  z-index: 1;
+                `;
+
+                const badge = document.createElement("span");
+                badge.textContent = "T";
+                badge.style.cssText = `
+                  background-color: ${signerColor};
+                  color: white;
+                  font-size: 10px;
+                  font-weight: bold;
+                  padding: 1px 5px;
+                  border-radius: 3px;
+                  flex-shrink: 0;
+                `;
+
+                const nameSpan = document.createElement("span");
+                nameSpan.textContent = signerName.toUpperCase();
+                nameSpan.style.cssText = `
+                  font-size: 10px;
+                  font-weight: 600;
+                  color: ${signerColor};
+                  letter-spacing: 0.5px;
+                `;
+
+                node.appendChild(badge);
+                node.appendChild(nameSpan);
+
+                function handleTextFieldClick(event: PointerEvent) {
+                  event.stopImmediatePropagation();
+                  const instance = instanceRef.current;
+                  if (!instance) return;
+
+                  instance.update(
+                    annotation.set("customData", {
+                      ...annotation.customData,
+                      activated: true,
+                    }),
+                  );
+
+                  // Focus the SDK input after the overlay is removed
+                  const c = containerRef.current;
+                  setTimeout(() => {
+                    const input = c?.querySelector<HTMLInputElement>(
+                      `input[name="${annotation.formFieldName}"]`,
+                    );
+                    input?.focus();
+                  }, 100);
+                }
+
+                node.addEventListener("pointerdown", handleTextFieldClick, {
+                  capture: true,
+                });
+
+                return {
+                  node,
+                  append: true,
+                  onDisappear: () => {
+                    node.removeEventListener(
+                      "pointerdown",
+                      handleTextFieldClick,
+                      { capture: true },
+                    );
+                  },
+                };
+              }
+
+              if (annotation.customData?.type !== "signature") {
                 return null;
               }
 
@@ -369,6 +467,12 @@ export default function TwoClickSignatureViewer() {
           width: 280,
           height: 24,
         }),
+        customData: {
+          type: "text-field",
+          signerName: "John Doe",
+          signerColor: "#4A90E2",
+          activated: false,
+        },
       });
       const fullNameField = new NV.FormFields.TextFormField({
         name: fullNameId,
@@ -388,6 +492,12 @@ export default function TwoClickSignatureViewer() {
           width: 150,
           height: 24,
         }),
+        customData: {
+          type: "text-field",
+          signerName: "Jane Smith",
+          signerColor: "#7B68EE",
+          activated: false,
+        },
       });
       const dateField = new NV.FormFields.TextFormField({
         name: dateId,
