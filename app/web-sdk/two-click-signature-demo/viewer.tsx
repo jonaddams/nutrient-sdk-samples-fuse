@@ -355,7 +355,7 @@ export default function TwoClickSignatureViewer() {
       }
 
       // ── Text fields ─────────────────────────────────────────
-      const fullNameId = `text-full-name-${Date.now()}`;
+      const fullNameId = `text-full-name-${Date.now()}-${Math.random()}`;
       const fullNameWidget = new NV.Annotations.WidgetAnnotation({
         id: fullNameId,
         pageIndex: 0,
@@ -368,7 +368,7 @@ export default function TwoClickSignatureViewer() {
         value: "",
       });
 
-      const dateId = `text-date-${Date.now()}`;
+      const dateId = `text-date-${Date.now()}-${Math.random()}`;
       const dateWidget = new NV.Annotations.WidgetAnnotation({
         id: dateId,
         pageIndex: 0,
