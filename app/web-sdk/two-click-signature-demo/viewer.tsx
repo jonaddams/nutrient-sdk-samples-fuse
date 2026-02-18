@@ -14,6 +14,32 @@ import type { Instance } from "@nutrient-sdk/viewer";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./styles.css";
 
+/**
+ * Creates a non-interactive TextAnnotation to serve as a form field label.
+ */
+function createLabel(
+  NV: NonNullable<typeof window.NutrientViewer>,
+  text: string,
+  x: number,
+  y: number,
+  width: number,
+  height = 20,
+) {
+  return new NV.Annotations.TextAnnotation({
+    pageIndex: 0,
+    boundingBox: new NV.Geometry.Rect({ left: x, top: y, width, height }),
+    text: { format: "plain", value: text },
+    fontSize: 11,
+    isBold: false,
+    horizontalAlign: "left",
+    verticalAlign: "center",
+    locked: true,
+    isDeletable: false,
+    isEditable: false,
+    customData: { type: "form-label" },
+  });
+}
+
 export default function TwoClickSignatureViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<Instance | null>(null);
@@ -300,31 +326,6 @@ export default function TwoClickSignatureViewer() {
       }
     };
   }, []);
-
-  /**
-   * Creates a non-interactive TextAnnotation to serve as a form field label.
-   */
-  const createLabel = (
-    NV: NonNullable<typeof window.NutrientViewer>,
-    text: string,
-    x: number,
-    y: number,
-    width: number,
-    height = 20,
-  ) =>
-    new NV.Annotations.TextAnnotation({
-      pageIndex: 0,
-      boundingBox: new NV.Geometry.Rect({ left: x, top: y, width, height }),
-      text: { format: "plain", value: text },
-      fontSize: 11,
-      isBold: false,
-      horizontalAlign: "left",
-      verticalAlign: "center",
-      locked: true,
-      isDeletable: false,
-      isEditable: false,
-      customData: { type: "form-label" },
-    });
 
   /**
    * Load default signature fields onto the document
