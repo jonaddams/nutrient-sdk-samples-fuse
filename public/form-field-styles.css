@@ -1,0 +1,46 @@
+/* Nutrient SDK form field visibility styles */
+
+/* Text inputs */
+.PSPDFKit-Annotation-Widget-Text {
+  background-color: rgba(245, 249, 255, 0.9) !important;
+  border: 1px solid #94b8d4 !important;
+  border-radius: 2px !important;
+  padding: 2px 4px !important;
+  box-sizing: border-box !important;
+}
+
+.PSPDFKit-Annotation-Widget-Text:focus {
+  background-color: #fff !important;
+  border-color: #4a90e2 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2) !important;
+}
+
+/* Checkboxes */
+.PSPDFKit-Annotation-Widget-CheckBox {
+  accent-color: #4a90e2;
+  cursor: pointer;
+}
+
+/* Radio buttons — style the custom control span, not the hidden input */
+.PSPDFKit-Annotation-Widget-RadioButton {
+  cursor: pointer;
+}
+
+.PSPDFKit-Annotation-Widget-RadioButton-Control {
+  display: inline-block !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  border: 2px solid #94b8d4 !important;
+  background-color: #fff !important;
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
+}
+
+.PSPDFKit-Annotation-Widget-RadioButton input:checked
+  ~ .PSPDFKit-Annotation-Widget-RadioButton-Control {
+  border-color: #4a90e2 !important;
+  background-color: #4a90e2 !important;
+  box-shadow: inset 0 0 0 3px #fff !important;
+}
