@@ -196,15 +196,16 @@ export default function TwoClickSignatureViewer() {
                * On click: removes the overlay and focuses the native SDK input.
                */
               if (annotation.customData?.type === "text-field") {
-                const { signerName, signerColor, activated } =
+                const { signerName, signerColor, activated, hasValue } =
                   annotation.customData as {
                     signerName: string;
                     signerColor: string;
                     activated?: boolean;
+                    hasValue?: boolean;
                   };
 
-                // Overlay dismissed — show native SDK text input
-                if (activated) return null;
+                // Hide overlay when value present or field is being edited
+                if (hasValue || activated) return null;
 
                 const node = document.createElement("div");
                 node.style.cssText = `
@@ -265,7 +266,36 @@ export default function TwoClickSignatureViewer() {
                     const input = c?.querySelector<HTMLInputElement>(
                       `input[name="${annotation.formFieldName}"]`,
                     );
-                    input?.focus();
+                    if (!input) return;
+                    input.focus();
+
+                    // If user leaves without typing, revert overlay
+                    input.addEventListener(
+                      "blur",
+                      async () => {
+                        const inst = instanceRef.current;
+                        const NV3 = window.NutrientViewer;
+                        if (!inst || !NV3) return;
+                        const pageAnnotations = await inst.getAnnotations(0);
+                        const currentAnn = pageAnnotations.find(
+                          (a) =>
+                            a instanceof NV3.Annotations.WidgetAnnotation &&
+                            a.id === annotation.id,
+                        );
+                        if (
+                          currentAnn?.customData?.activated &&
+                          !currentAnn?.customData?.hasValue
+                        ) {
+                          await inst.update(
+                            currentAnn.set("customData", {
+                              ...currentAnn.customData,
+                              activated: false,
+                            }),
+                          );
+                        }
+                      },
+                      { once: true },
+                    );
                   }, 100);
                 }
 
@@ -409,6 +439,49 @@ export default function TwoClickSignatureViewer() {
           setTimeout(() => updateSignedFieldOverlays(), 100);
         });
 
+        /**
+         * Keep text-field overlay visibility in sync with the field's value.
+         * When the value becomes non-empty the overlay is hidden; when cleared
+         * it reappears. hasValue is stored in customData so the custom renderer
+         * can read it synchronously.
+         */
+        instance.addEventListener(
+          "formFieldValues.update",
+          (formFieldValues) => {
+            const NV3 = window.NutrientViewer;
+            if (!NV3) return;
+            // biome-ignore lint/suspicious/noExplicitAny: FormFieldValues type not fully available
+            const values = (formFieldValues as any).toJS() as Record<
+              string,
+              unknown
+            >;
+
+            (async () => {
+              const annotations = await instance.getAnnotations(0);
+              for (const ann of annotations) {
+                if (
+                  ann instanceof NV3.Annotations.WidgetAnnotation &&
+                  ann.customData?.type === "text-field" &&
+                  ann.formFieldName in values
+                ) {
+                  const rawValue = values[ann.formFieldName];
+                  const hasValue =
+                    typeof rawValue === "string" && rawValue.length > 0;
+                  if ((ann.customData?.hasValue ?? false) !== hasValue) {
+                    await instance.update(
+                      ann.set("customData", {
+                        ...ann.customData,
+                        hasValue,
+                        activated: false,
+                      }),
+                    );
+                  }
+                }
+              }
+            })().catch(console.error);
+          },
+        );
+
         setTimeout(() => updateSignedFieldOverlays(), 500);
       } catch (error) {
         console.error("Error loading viewer:", error);
@@ -472,6 +545,7 @@ export default function TwoClickSignatureViewer() {
           signerName: "John Doe",
           signerColor: "#4A90E2",
           activated: false,
+          hasValue: false,
         },
       });
       const fullNameField = new NV.FormFields.TextFormField({
@@ -497,6 +571,7 @@ export default function TwoClickSignatureViewer() {
           signerName: "Jane Smith",
           signerColor: "#7B68EE",
           activated: false,
+          hasValue: false,
         },
       });
       const dateField = new NV.FormFields.TextFormField({
