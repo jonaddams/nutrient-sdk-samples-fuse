@@ -336,7 +336,7 @@ export default function TwoClickSignatureViewer() {
     if (!instance || !NV) return;
 
     try {
-      setStatus("Loading signature fields...");
+      setStatus("Loading form fields...");
 
       // Clear existing form fields (widget annotations are deleted automatically)
       const existingFields = await instance.getFormFields();
@@ -496,7 +496,7 @@ export default function TwoClickSignatureViewer() {
         await instance.create([annotation, formField]);
       }
 
-      setStatus("Signature fields loaded!");
+      setStatus("Form fields loaded!");
       setTimeout(() => setStatus(""), 2000);
     } catch (error) {
       console.error("Error loading fields:", error);
@@ -516,7 +516,7 @@ export default function TwoClickSignatureViewer() {
             className="load-fields-btn"
             onClick={handleLoadFields}
           >
-            Load Signature Fields
+            Load Form Fields
           </button>
         </div>
 
@@ -524,14 +524,19 @@ export default function TwoClickSignatureViewer() {
           <div className="sidebar-label">Instructions</div>
           <div className="instructions">
             <ol>
-              <li>Click "Load Signature Fields" to add fields to the document</li>
+              <li>Click "Load Form Fields" to populate the document</li>
               <li>
-                <strong>First click</strong> on a field changes it to "click to
-                sign"
+                Fill in the <strong>text fields</strong>, toggle{" "}
+                <strong>checkboxes</strong>, and select a{" "}
+                <strong>radio option</strong>
               </li>
               <li>
-                Clicking <strong>elsewhere</strong> reverts the field back to
-                "sign here"
+                <strong>First click</strong> on a signature field changes it
+                to "click to sign"
+              </li>
+              <li>
+                Clicking <strong>elsewhere</strong> reverts it back to "sign
+                here"
               </li>
               <li>
                 <strong>Second click</strong> on an active field opens the
