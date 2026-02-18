@@ -354,6 +354,42 @@ export default function TwoClickSignatureViewer() {
         await instance.delete(label);
       }
 
+      // ── Text fields ─────────────────────────────────────────
+      const fullNameId = `text-full-name-${Date.now()}`;
+      const fullNameWidget = new NV.Annotations.WidgetAnnotation({
+        id: fullNameId,
+        pageIndex: 0,
+        formFieldName: fullNameId,
+        boundingBox: new NV.Geometry.Rect({ left: 160, top: 50, width: 280, height: 24 }),
+      });
+      const fullNameField = new NV.FormFields.TextFormField({
+        name: fullNameId,
+        annotationIds: NV.Immutable.List([fullNameId]),
+        value: "",
+      });
+
+      const dateId = `text-date-${Date.now()}`;
+      const dateWidget = new NV.Annotations.WidgetAnnotation({
+        id: dateId,
+        pageIndex: 0,
+        formFieldName: dateId,
+        boundingBox: new NV.Geometry.Rect({ left: 160, top: 100, width: 150, height: 24 }),
+      });
+      const dateField = new NV.FormFields.TextFormField({
+        name: dateId,
+        annotationIds: NV.Immutable.List([dateId]),
+        value: "",
+      });
+
+      await instance.create([
+        createLabel(NV, "Full Name:", 50, 52, 100),
+        fullNameWidget,
+        fullNameField,
+        createLabel(NV, "Date:", 50, 102, 100),
+        dateWidget,
+        dateField,
+      ]);
+
       // Two rows of signature fields, 100px apart
       const fields = [
         { name: "John Doe",   color: "#4A90E2", x: 96,  y: 300 },
